@@ -14,16 +14,182 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      habit_completions: {
+        Row: {
+          completed_date: string
+          created_at: string | null
+          habit_id: string
+          id: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          completed_date?: string
+          created_at?: string | null
+          habit_id: string
+          id?: string
+          user_id: string
+          xp_earned: number
+        }
+        Update: {
+          completed_date?: string
+          created_at?: string | null
+          habit_id?: string
+          id?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_completions_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "habit_completions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          attribute: Database["public"]["Enums"]["attribute_type"]
+          created_at: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+          xp_value: number
+        }
+        Insert: {
+          attribute: Database["public"]["Enums"]["attribute_type"]
+          created_at?: string | null
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+          xp_value?: number
+        }
+        Update: {
+          attribute?: Database["public"]["Enums"]["attribute_type"]
+          created_at?: string | null
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+          xp_value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          current_level: number | null
+          current_xp: number | null
+          email: string
+          full_name: string
+          id: string
+          last_activity_date: string | null
+          streak_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_level?: number | null
+          current_xp?: number | null
+          email: string
+          full_name: string
+          id?: string
+          last_activity_date?: string | null
+          streak_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_level?: number | null
+          current_xp?: number | null
+          email?: string
+          full_name?: string
+          id?: string
+          last_activity_date?: string | null
+          streak_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_level: {
+        Args: { xp: number }
+        Returns: number
+      }
+      get_rank: {
+        Args: { level: number }
+        Returns: string
+      }
+      update_user_xp: {
+        Args: { p_user_id: string; xp_to_add: number }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      attribute_type: "brain" | "health" | "skill" | "discipline" | "focus"
+      difficulty_level: "easy" | "medium" | "hard"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +316,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      attribute_type: ["brain", "health", "skill", "discipline", "focus"],
+      difficulty_level: ["easy", "medium", "hard"],
+    },
   },
 } as const
