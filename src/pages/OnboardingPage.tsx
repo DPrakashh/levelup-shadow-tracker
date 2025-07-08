@@ -1,6 +1,5 @@
-
-import React, { useState } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import React, { useState, useEffect } from 'react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +22,7 @@ interface Habit {
 
 const OnboardingPage = () => {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [fullName, setFullName] = useState(user?.fullName || '');
@@ -34,6 +34,23 @@ const OnboardingPage = () => {
     { name: '', attribute: '', difficulty: '' },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Set up supabase auth when component mounts
+  useEffect(() => {
+    const setupSupabaseAuth = async () => {
+      if (user) {
+        const token = await getToken({ template: 'supabase' });
+        if (token) {
+          await supabase.auth.setSession({
+            access_token: token,
+            refresh_token: 'dummy-refresh-token',
+          });
+        }
+      }
+    };
+    
+    setupSupabaseAuth();
+  }, [user, getToken]);
 
   const attributeOptions = [
     { value: 'brain' as const, label: 'Brain 🧠', icon: Brain },
@@ -75,6 +92,17 @@ const OnboardingPage = () => {
     setIsLoading(true);
 
     try {
+      // Get fresh token and set session
+      const token = await getToken({ template: 'supabase' });
+      if (token) {
+        await supabase.auth.setSession({
+          access_token: token,
+          refresh_token: 'dummy-refresh-token',
+        });
+      }
+
+      console.log('Creating profile for user:', user.id);
+      
       // Create user profile
       const { error: profileError } = await supabase
         .from('profiles')
@@ -87,7 +115,12 @@ const OnboardingPage = () => {
           streak_count: 0
         });
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        throw profileError;
+      }
+
+      console.log('Profile created successfully');
 
       // Create habits with proper typing
       const habitsToInsert = habits.map(habit => ({
@@ -102,7 +135,12 @@ const OnboardingPage = () => {
         .from('habits')
         .insert(habitsToInsert);
 
-      if (habitsError) throw habitsError;
+      if (habitsError) {
+        console.error('Habits creation error:', habitsError);
+        throw habitsError;
+      }
+
+      console.log('Habits created successfully');
 
       toast({
         title: "Welcome to LevelUp!",

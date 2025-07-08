@@ -19,6 +19,18 @@ const SignInPage = () => {
             elements: {
               rootBox: "mx-auto",
               card: "bg-black/40 backdrop-blur-sm border border-purple-500/30",
+              headerTitle: "text-white",
+              headerSubtitle: "text-gray-300",
+              socialButtonsBlockButton: "bg-white/10 border-gray-600 text-white hover:bg-white/20",
+              socialButtonsBlockButtonText: "text-white",
+              dividerLine: "bg-gray-600",
+              dividerText: "text-gray-300",
+              formFieldLabel: "text-white",
+              formFieldInput: "bg-slate-800/50 border-slate-600 text-white placeholder:text-gray-400",
+              formButtonPrimary: "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700",
+              footerActionLink: "text-blue-400 hover:text-blue-300",
+              identityPreviewText: "text-white",
+              identityPreviewEditButton: "text-blue-400",
             }
           }}
         />
