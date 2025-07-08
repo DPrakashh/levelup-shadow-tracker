@@ -134,7 +134,7 @@ const Index = () => {
             <Card className="bg-black/40 border-blue-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-xl text-white flex items-center gap-2">
-                  <ArrowUser className="w-5 h-5 text-blue-400" />
+                  <ArrowUp className="w-5 h-5 text-blue-400" />
                   Daily Growth Overview
                 </CardTitle>
               </CardHeader>
