@@ -10,11 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { Brain, Heart, Sword, Target, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
+
+type AttributeType = Database['public']['Enums']['attribute_type'];
+type DifficultyLevel = Database['public']['Enums']['difficulty_level'];
 
 interface Habit {
   name: string;
-  attribute: string;
-  difficulty: string;
+  attribute: AttributeType | '';
+  difficulty: DifficultyLevel | '';
 }
 
 const OnboardingPage = () => {
@@ -32,22 +36,22 @@ const OnboardingPage = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const attributeOptions = [
-    { value: 'brain', label: 'Brain 🧠', icon: Brain },
-    { value: 'health', label: 'Health 💪', icon: Heart },
-    { value: 'skill', label: 'Skill ⚔️', icon: Sword },
-    { value: 'discipline', label: 'Discipline 🧘', icon: Target },
-    { value: 'focus', label: 'Focus 🎯', icon: Eye },
+    { value: 'brain' as const, label: 'Brain 🧠', icon: Brain },
+    { value: 'health' as const, label: 'Health 💪', icon: Heart },
+    { value: 'skill' as const, label: 'Skill ⚔️', icon: Sword },
+    { value: 'discipline' as const, label: 'Discipline 🧘', icon: Target },
+    { value: 'focus' as const, label: 'Focus 🎯', icon: Eye },
   ];
 
   const difficultyOptions = [
-    { value: 'easy', label: 'Easy (5 XP)', xp: 5 },
-    { value: 'medium', label: 'Medium (10 XP)', xp: 10 },
-    { value: 'hard', label: 'Hard (20 XP)', xp: 20 },
+    { value: 'easy' as const, label: 'Easy (5 XP)', xp: 5 },
+    { value: 'medium' as const, label: 'Medium (10 XP)', xp: 10 },
+    { value: 'hard' as const, label: 'Hard (20 XP)', xp: 20 },
   ];
 
   const updateHabit = (index: number, field: keyof Habit, value: string) => {
     const newHabits = [...habits];
-    newHabits[index][field] = value;
+    newHabits[index][field] = value as any;
     setHabits(newHabits);
   };
 
@@ -85,12 +89,12 @@ const OnboardingPage = () => {
 
       if (profileError) throw profileError;
 
-      // Create habits
+      // Create habits with proper typing
       const habitsToInsert = habits.map(habit => ({
         user_id: user.id,
         name: habit.name,
-        attribute: habit.attribute,
-        difficulty: habit.difficulty,
+        attribute: habit.attribute as AttributeType,
+        difficulty: habit.difficulty as DifficultyLevel,
         xp_value: difficultyOptions.find(d => d.value === habit.difficulty)?.xp || 5
       }));
 
