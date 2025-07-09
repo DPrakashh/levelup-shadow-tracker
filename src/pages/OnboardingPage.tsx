@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useUser, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
@@ -35,23 +36,6 @@ const OnboardingPage = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Set up supabase auth when component mounts
-  useEffect(() => {
-    const setupSupabaseAuth = async () => {
-      if (user) {
-        const token = await getToken({ template: 'supabase' });
-        if (token) {
-          await supabase.auth.setSession({
-            access_token: token,
-            refresh_token: 'dummy-refresh-token',
-          });
-        }
-      }
-    };
-    
-    setupSupabaseAuth();
-  }, [user, getToken]);
-
   const attributeOptions = [
     { value: 'brain' as const, label: 'Brain 🧠', icon: Brain },
     { value: 'health' as const, label: 'Health 💪', icon: Heart },
@@ -75,7 +59,14 @@ const OnboardingPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to continue.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Validate all habits are filled
     const isValid = habits.every(habit => habit.name && habit.attribute && habit.difficulty) && fullName;
@@ -92,32 +83,29 @@ const OnboardingPage = () => {
     setIsLoading(true);
 
     try {
-      // Get fresh token and set session
-      const token = await getToken({ template: 'supabase' });
-      if (token) {
-        await supabase.auth.setSession({
-          access_token: token,
-          refresh_token: 'dummy-refresh-token',
-        });
-      }
-
-      console.log('Creating profile for user:', user.id);
+      console.log('Starting onboarding for user:', user.id);
+      console.log('Full name:', fullName);
+      console.log('Habits:', habits);
       
-      // Create user profile
+      // Create user profile directly without JWT template
+      const profileData = {
+        user_id: user.id,
+        full_name: fullName,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        current_xp: 0,
+        current_level: 1,
+        streak_count: 0
+      };
+
+      console.log('Creating profile with data:', profileData);
+
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert({
-          user_id: user.id,
-          full_name: fullName,
-          email: user.emailAddresses[0]?.emailAddress || '',
-          current_xp: 0,
-          current_level: 1,
-          streak_count: 0
-        });
+        .insert(profileData);
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        throw profileError;
+        throw new Error(`Profile creation failed: ${profileError.message}`);
       }
 
       console.log('Profile created successfully');
@@ -131,13 +119,15 @@ const OnboardingPage = () => {
         xp_value: difficultyOptions.find(d => d.value === habit.difficulty)?.xp || 5
       }));
 
+      console.log('Creating habits with data:', habitsToInsert);
+
       const { error: habitsError } = await supabase
         .from('habits')
         .insert(habitsToInsert);
 
       if (habitsError) {
         console.error('Habits creation error:', habitsError);
-        throw habitsError;
+        throw new Error(`Habits creation failed: ${habitsError.message}`);
       }
 
       console.log('Habits created successfully');
@@ -152,7 +142,7 @@ const OnboardingPage = () => {
       console.error('Onboarding error:', error);
       toast({
         title: "Setup failed",
-        description: "There was an error setting up your profile. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error setting up your profile. Please try again.",
         variant: "destructive"
       });
     } finally {
