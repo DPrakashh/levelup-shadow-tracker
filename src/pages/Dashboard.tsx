@@ -1,13 +1,13 @@
 
 import React, { useEffect, useState } from 'react';
-import { useUser, SignOutButton } from '@clerk/clerk-react';
+import { useUser, SignOutButton, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Brain, Heart, Sword, Target, Eye, Calendar, Flame, ArrowUp, LogOut } from 'lucide-react';
+import { Brain, Heart, Sword, Target, Eye, Calendar, Flame, ArrowUp, LogOut, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -33,12 +33,30 @@ interface HabitCompletion {
 
 const Dashboard = () => {
   const { user } = useUser();
+  const { getToken } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Set up supabase auth when component mounts
+  useEffect(() => {
+    const setupSupabaseAuth = async () => {
+      if (user) {
+        const token = await getToken({ template: 'supabase' });
+        if (token) {
+          await supabase.auth.setSession({
+            access_token: token,
+            refresh_token: 'dummy-refresh-token',
+          });
+        }
+      }
+    };
+    
+    setupSupabaseAuth();
+  }, [user, getToken]);
+
   // Fetch user profile
-  const { data: profile } = useQuery({
+  const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
@@ -48,11 +66,22 @@ const Dashboard = () => {
         .eq('user_id', user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Profile fetch error:', error);
+        return null;
+      }
       return data as Profile;
     },
     enabled: !!user?.id
   });
+
+  // Redirect to onboarding if no profile
+  useEffect(() => {
+    if (user && !profileLoading && profile === null) {
+      console.log('No profile found, redirecting to onboarding');
+      navigate('/onboarding');
+    }
+  }, [user, profile, profileLoading, navigate]);
 
   // Fetch user habits
   const { data: habits = [] } = useQuery({
@@ -68,7 +97,7 @@ const Dashboard = () => {
       if (error) throw error;
       return data as Habit[];
     },
-    enabled: !!user?.id
+    enabled: !!user?.id && !!profile
   });
 
   // Fetch today's completions
@@ -86,15 +115,8 @@ const Dashboard = () => {
       if (error) throw error;
       return data as HabitCompletion[];
     },
-    enabled: !!user?.id
+    enabled: !!user?.id && !!profile
   });
-
-  // Redirect to onboarding if no profile
-  useEffect(() => {
-    if (user && profile === null) {
-      navigate('/onboarding');
-    }
-  }, [user, profile, navigate]);
 
   const getAttributeIcon = (attribute: string) => {
     switch (attribute) {
@@ -202,7 +224,7 @@ const Dashboard = () => {
     }
   };
 
-  if (!profile) {
+  if (profileLoading || !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading your adventure...</div>
@@ -229,12 +251,21 @@ const Dashboard = () => {
                 Welcome back, {profile.full_name} 👋
               </p>
             </div>
-            <SignOutButton redirectUrl="/">
-              <Button variant="ghost" className="text-white hover:text-red-400">
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
+            <div className="flex gap-4">
+              <Button 
+                onClick={() => navigate('/skills')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Skills
               </Button>
-            </SignOutButton>
+              <SignOutButton redirectUrl="/">
+                <Button variant="ghost" className="text-white hover:text-red-400">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </Button>
+              </SignOutButton>
+            </div>
           </div>
         </div>
       </div>
