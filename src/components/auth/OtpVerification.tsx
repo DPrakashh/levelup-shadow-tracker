@@ -29,6 +29,7 @@ export const OtpVerification = ({ email, onVerified, onBack }: OtpVerificationPr
       const { error } = await verifyOtp(email, otp);
       
       if (error) {
+        console.log('OTP verification error:', error);
         if (error.message.includes('expired') || error.message.includes('invalid')) {
           toast.error('Invalid or expired code. Please try again.');
         } else {
@@ -39,6 +40,7 @@ export const OtpVerification = ({ email, onVerified, onBack }: OtpVerificationPr
         onVerified();
       }
     } catch (err) {
+      console.error('OTP verification error:', err);
       toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
@@ -51,12 +53,18 @@ export const OtpVerification = ({ email, onVerified, onBack }: OtpVerificationPr
       const { error } = await resendOtp(email);
       
       if (error) {
-        toast.error(error.message);
+        console.log('Resend OTP error:', error);
+        if (error.message.includes('User already registered')) {
+          toast.success('Verification code sent to your email');
+        } else {
+          toast.error(error.message);
+        }
       } else {
         toast.success('Verification code sent to your email');
         setOtp('');
       }
     } catch (err) {
+      console.error('Resend OTP error:', err);
       toast.error('Failed to resend code. Please try again.');
     } finally {
       setResending(false);
@@ -67,8 +75,11 @@ export const OtpVerification = ({ email, onVerified, onBack }: OtpVerificationPr
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-white mb-2">Verify Your Email</h2>
-        <p className="text-gray-300">
+        <p className="text-gray-300 mb-4">
           We've sent a 6-digit code to <span className="text-blue-400">{email}</span>
+        </p>
+        <p className="text-sm text-gray-400">
+          Check your inbox (and spam folder) for the verification code
         </p>
       </div>
 

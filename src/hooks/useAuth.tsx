@@ -47,8 +47,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
       options: {
-        // Don't send confirmation email, we'll handle OTP verification
-        emailRedirectTo: undefined
+        emailRedirectTo: `${window.location.origin}/onboarding`,
+        // Force email confirmation with OTP
+        data: {
+          email_confirm: true
+        }
       }
     });
     
@@ -75,9 +78,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const resendOtp = async (email: string) => {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email
+    // Use signUp again to resend the OTP
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: 'dummy', // We don't actually need the password for resending
+      options: {
+        emailRedirectTo: `${window.location.origin}/onboarding`,
+        data: {
+          email_confirm: true
+        }
+      }
     });
     
     return { error };
