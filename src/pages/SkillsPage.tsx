@@ -1,7 +1,7 @@
 
 import React, { useEffect } from 'react';
-import { useUser, SignOutButton, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -32,26 +32,15 @@ interface DailyHabitLog {
 }
 
 const SkillsPage = () => {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  // Set up supabase auth when component mounts
+  // Redirect to sign-in if not authenticated
   useEffect(() => {
-    const setupSupabaseAuth = async () => {
-      if (user) {
-        const token = await getToken({ template: 'supabase' });
-        if (token) {
-          await supabase.auth.setSession({
-            access_token: token,
-            refresh_token: 'dummy-refresh-token',
-          });
-        }
-      }
-    };
-    
-    setupSupabaseAuth();
-  }, [user, getToken]);
+    if (!user) {
+      navigate('/sign-in');
+    }
+  }, [user, navigate]);
 
   // Fetch user profile
   const { data: profile } = useQuery({
@@ -165,6 +154,15 @@ const SkillsPage = () => {
     return 'E-Rank';
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  if (!user) {
+    return null;
+  }
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
@@ -213,12 +211,14 @@ const SkillsPage = () => {
                 <Home className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
-              <SignOutButton redirectUrl="/">
-                <Button variant="ghost" className="text-white hover:text-red-400">
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sign Out
-                </Button>
-              </SignOutButton>
+              <Button 
+                onClick={handleSignOut}
+                variant="ghost" 
+                className="text-white hover:text-red-400"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>

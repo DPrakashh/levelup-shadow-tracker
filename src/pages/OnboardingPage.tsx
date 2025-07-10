@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Brain, Heart, Sword, Target, Eye } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type AttributeType = Database['public']['Enums']['attribute_type'];
@@ -22,11 +22,9 @@ interface Habit {
 }
 
 const OnboardingPage = () => {
-  const { user } = useUser();
-  const { getToken } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [fullName, setFullName] = useState('');
   const [habits, setHabits] = useState<Habit[]>([
     { name: '', attribute: '', difficulty: '' },
     { name: '', attribute: '', difficulty: '' },
@@ -35,6 +33,13 @@ const OnboardingPage = () => {
     { name: '', attribute: '', difficulty: '' },
   ]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!user) {
+      navigate('/sign-in');
+    }
+  }, [user, navigate]);
 
   const attributeOptions = [
     { value: 'brain' as const, label: 'Brain 🧠', icon: Brain },
@@ -60,11 +65,7 @@ const OnboardingPage = () => {
     e.preventDefault();
     
     if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to continue.",
-        variant: "destructive"
-      });
+      toast.error("Please sign in to continue.");
       return;
     }
     
@@ -72,10 +73,8 @@ const OnboardingPage = () => {
     const isValid = habits.every(habit => habit.name && habit.attribute && habit.difficulty) && fullName;
     
     if (!isValid) {
-      toast({
-        title: "Please fill in all fields",
-        description: "Make sure to complete all habit details and your full name.",
-        variant: "destructive"
+      toast.error("Please fill in all fields", {
+        description: "Make sure to complete all habit details and your full name."
       });
       return;
     }
@@ -87,11 +86,11 @@ const OnboardingPage = () => {
       console.log('Full name:', fullName);
       console.log('Habits:', habits);
       
-      // Create user profile directly without JWT template
+      // Create user profile
       const profileData = {
         user_id: user.id,
         full_name: fullName,
-        email: user.emailAddresses[0]?.emailAddress || '',
+        email: user.email || '',
         current_xp: 0,
         current_level: 1,
         streak_count: 0
@@ -132,23 +131,24 @@ const OnboardingPage = () => {
 
       console.log('Habits created successfully');
 
-      toast({
-        title: "Welcome to LevelUp!",
-        description: "Your profile and habits have been set up successfully.",
+      toast.success("Welcome to LevelUp!", {
+        description: "Your profile and habits have been set up successfully."
       });
 
       navigate('/dashboard');
     } catch (error) {
       console.error('Onboarding error:', error);
-      toast({
-        title: "Setup failed",
-        description: error instanceof Error ? error.message : "There was an error setting up your profile. Please try again.",
-        variant: "destructive"
+      toast.error("Setup failed", {
+        description: error instanceof Error ? error.message : "There was an error setting up your profile. Please try again."
       });
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-4">
