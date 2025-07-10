@@ -25,7 +25,7 @@ interface Habit {
   xp_value: number;
 }
 
-interface HabitCompletion {
+interface DailyHabitLog {
   habit_id: string;
   completed_date: string;
   xp_earned: number;
@@ -87,18 +87,18 @@ const SkillsPage = () => {
     enabled: !!user?.id
   });
 
-  // Fetch all habit completions for XP calculation
+  // Fetch all habit completions for XP calculation from daily_habit_logs
   const { data: allCompletions = [] } = useQuery({
-    queryKey: ['all-completions', user?.id],
+    queryKey: ['all-daily-completions', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const { data, error } = await supabase
-        .from('habit_completions')
+        .from('daily_habit_logs')
         .select('*')
         .eq('user_id', user.id);
       
       if (error) throw error;
-      return data as HabitCompletion[];
+      return data as DailyHabitLog[];
     },
     enabled: !!user?.id
   });
@@ -277,7 +277,7 @@ const SkillsPage = () => {
                     Level {level}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {xp} XP earned
+                    {xp} XP earned from daily completions
                   </div>
                 </div>
 
@@ -307,7 +307,7 @@ const SkillsPage = () => {
                       .map(habit => (
                         <div key={habit.id} className="text-xs text-gray-400 flex justify-between">
                           <span>{habit.name}</span>
-                          <span>+{habit.xp_value} XP</span>
+                          <span>+{habit.xp_value} XP per completion</span>
                         </div>
                       ))
                     }
@@ -326,6 +326,9 @@ const SkillsPage = () => {
             <p className="text-gray-300 max-w-2xl mx-auto">
               Every completed habit strengthens your skills. Master all five attributes to become the ultimate Shadow Hunter! 
               Your current streak: <span className="text-orange-400 font-bold">{profile.streak_count} days</span> 🔥
+            </p>
+            <p className="text-sm text-gray-400 mt-4">
+              Daily habits reset at 6 AM, but your progress and XP are preserved forever!
             </p>
           </CardContent>
         </Card>

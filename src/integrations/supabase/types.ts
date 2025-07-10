@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_habit_logs: {
+        Row: {
+          completed_at: string
+          completed_date: string
+          created_at: string
+          habit_id: string
+          id: string
+          reset_cycle: string
+          user_id: string
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string
+          completed_date?: string
+          created_at?: string
+          habit_id: string
+          id?: string
+          reset_cycle?: string
+          user_id: string
+          xp_earned?: number
+        }
+        Update: {
+          completed_at?: string
+          completed_date?: string
+          created_at?: string
+          habit_id?: string
+          id?: string
+          reset_cycle?: string
+          user_id?: string
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_habit_logs_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       habit_completions: {
         Row: {
           completed_date: string
@@ -139,6 +180,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_progress: {
+        Row: {
+          created_at: string
+          current_streak: number
+          id: string
+          last_activity_date: string | null
+          last_reset_date: string | null
+          longest_streak: number
+          total_habits_completed: number
+          total_xp_earned: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          last_reset_date?: string | null
+          longest_streak?: number
+          total_habits_completed?: number
+          total_xp_earned?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_streak?: number
+          id?: string
+          last_activity_date?: string | null
+          last_reset_date?: string | null
+          longest_streak?: number
+          total_habits_completed?: number
+          total_xp_earned?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -180,6 +260,10 @@ export type Database = {
       get_rank: {
         Args: { level: number }
         Returns: string
+      }
+      reset_daily_habits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_user_xp: {
         Args: { p_user_id: string; xp_to_add: number }

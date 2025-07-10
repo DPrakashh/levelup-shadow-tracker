@@ -26,9 +26,10 @@ interface Habit {
   xp_value: number;
 }
 
-interface HabitCompletion {
+interface DailyHabitLog {
   habit_id: string;
   completed_date: string;
+  xp_earned: number;
 }
 
 const Dashboard = () => {
@@ -100,20 +101,20 @@ const Dashboard = () => {
     enabled: !!user?.id && !!profile
   });
 
-  // Fetch today's completions
-  const { data: completions = [] } = useQuery({
-    queryKey: ['completions', user?.id],
+  // Fetch today's completions from daily_habit_logs
+  const { data: todayCompletions = [] } = useQuery({
+    queryKey: ['daily-completions', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
       const today = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
-        .from('habit_completions')
+        .from('daily_habit_logs')
         .select('*')
         .eq('user_id', user.id)
         .eq('completed_date', today);
       
       if (error) throw error;
-      return data as HabitCompletion[];
+      return data as DailyHabitLog[];
     },
     enabled: !!user?.id && !!profile
   });
@@ -155,7 +156,7 @@ const Dashboard = () => {
   };
 
   const isHabitCompleted = (habitId: string) => {
-    return completions.some(completion => completion.habit_id === habitId);
+    return todayCompletions.some(completion => completion.habit_id === habitId);
   };
 
   const toggleHabit = async (habit: Habit) => {
@@ -166,9 +167,9 @@ const Dashboard = () => {
 
     try {
       if (isCompleted) {
-        // Remove completion
+        // Remove from daily_habit_logs
         const { error } = await supabase
-          .from('habit_completions')
+          .from('daily_habit_logs')
           .delete()
           .eq('habit_id', habit.id)
           .eq('user_id', user.id)
@@ -187,9 +188,9 @@ const Dashboard = () => {
           description: `Removed ${habit.xp_value} XP for ${habit.name}`,
         });
       } else {
-        // Add completion
+        // Add to daily_habit_logs
         const { error } = await supabase
-          .from('habit_completions')
+          .from('daily_habit_logs')
           .insert({
             user_id: user.id,
             habit_id: habit.id,
@@ -213,7 +214,7 @@ const Dashboard = () => {
 
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['profile'] });
-      queryClient.invalidateQueries({ queryKey: ['completions'] });
+      queryClient.invalidateQueries({ queryKey: ['daily-completions'] });
     } catch (error) {
       console.error('Error toggling habit:', error);
       toast({
@@ -281,7 +282,7 @@ const Dashboard = () => {
                   <Calendar className="w-6 h-6 text-purple-400" />
                   Daily Quest Log
                 </CardTitle>
-                <p className="text-gray-400">Complete your daily habits to gain XP and rank up!</p>
+                <p className="text-gray-400">Complete your daily habits to gain XP and rank up! Resets every day at 6 AM.</p>
               </CardHeader>
               <CardContent className="space-y-4">
                 {habits.map((habit) => {
@@ -330,7 +331,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Daily Growth Overview */}
+            {/* Daily Progress Overview */}
             <Card className="bg-black/40 border-blue-500/30 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="text-xl text-white flex items-center gap-2">
@@ -340,8 +341,9 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center p-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg border border-blue-500/30">
-                  <p className="text-gray-400 text-sm">Quests Completed</p>
+                  <p className="text-gray-400 text-sm">Quests Completed Today</p>
                   <p className="text-3xl font-bold text-blue-300">{completedHabits}/{habits.length}</p>
+                  <p className="text-xs text-gray-500 mt-2">Resets daily at 6 AM</p>
                 </div>
               </CardContent>
             </Card>
