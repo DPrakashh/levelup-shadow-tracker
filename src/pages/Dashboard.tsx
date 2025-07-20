@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import AddHabitModal from '@/components/habits/AddHabitModal';
+import HabitCard from '@/components/habits/HabitCard';
+import { Swords } from 'lucide-react';
 
 interface Habit {
   id: string;
@@ -239,51 +242,109 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Daily Habits */}
-        <Card className="bg-black/40 border-purple-500/30">
-          <CardHeader>
-            <CardTitle className="text-white text-xl">Today's Habits</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {habits.length === 0 ? (
-              <p className="text-gray-400">No active habits. Create some habits to get started!</p>
-            ) : (
-              <div className="space-y-4">
-                {habits.map((habit) => {
-                  const isCompleted = dailyCompletions.includes(habit.id);
-                  return (
-                    <div key={habit.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h3 className="text-white font-medium">{habit.name}</h3>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="outline" className="text-xs">
-                              {habit.attribute}
-                            </Badge>
-                            <Badge variant="outline" className="text-xs">
-                              {habit.difficulty}
-                            </Badge>
-                            <span className="text-green-400 text-xs">+{habit.xp_value} XP</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => completeHabit(habit.id, habit.xp_value)}
-                        disabled={isCompleted}
-                        className={isCompleted 
-                          ? "bg-green-600 text-white cursor-not-allowed" 
-                          : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                        }
-                      >
-                        {isCompleted ? '✓ Completed' : 'Complete'}
-                      </Button>
+        {/* Habits Management Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Daily Habits */}
+          <div className="lg:col-span-2">
+            <Card className="bg-black/40 border-purple-500/30">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-white text-xl flex items-center gap-2">
+                    <Swords className="w-5 h-5" />
+                    Today's Habits
+                  </CardTitle>
+                  <AddHabitModal onHabitAdded={fetchHabits} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                {habits.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Swords className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                    <p className="text-gray-400 mb-4">No active habits yet</p>
+                    <p className="text-sm text-gray-500">Create your first habit to start your journey!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {habits.map((habit) => {
+                      const isCompleted = dailyCompletions.includes(habit.id);
+                      return (
+                        <HabitCard
+                          key={habit.id}
+                          habit={habit}
+                          isCompleted={isCompleted}
+                          onComplete={completeHabit}
+                          onDelete={fetchHabits}
+                          userId={user?.id || ''}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="space-y-6">
+            <Card className="bg-black/40 border-blue-500/30">
+              <CardHeader>
+                <CardTitle className="text-white text-lg">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button
+                  onClick={() => navigate('/skills')}
+                  variant="outline"
+                  className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-600/20"
+                >
+                  View Skills & Attributes
+                </Button>
+                <Button
+                  onClick={() => navigate('/onboarding')}
+                  variant="outline"
+                  className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-600/20"
+                >
+                  Character Setup
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Progress Summary */}
+            <Card className="bg-black/40 border-green-500/30">
+              <CardHeader>
+                <CardTitle className="text-white text-lg">Progress Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-300">Daily Progress</span>
+                    <span className="text-green-400">
+                      {dailyCompletions.length}/{habits.length}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={habits.length > 0 ? (dailyCompletions.length / habits.length) * 100 : 0}
+                    className="h-2"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">
+                      {userProgress?.current_streak || 0}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <div className="text-xs text-gray-400">Day Streak</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-white">
+                      {userProgress?.total_habits_completed || 0}
+                    </div>
+                    <div className="text-xs text-gray-400">Total Done</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
