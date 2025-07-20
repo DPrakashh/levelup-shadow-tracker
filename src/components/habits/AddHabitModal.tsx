@@ -58,8 +58,8 @@ const AddHabitModal = ({ onHabitAdded }: AddHabitModalProps) => {
         .insert({
           user_id: user.id,
           name: formData.name.trim(),
-          attribute: formData.attribute,
-          difficulty: formData.difficulty,
+          attribute: formData.attribute as any,
+          difficulty: formData.difficulty as any,
           xp_value: getXPValue(formData.difficulty),
           is_active: true
         });

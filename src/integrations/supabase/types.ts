@@ -273,7 +273,7 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user"
       attribute_type: "brain" | "health" | "skill" | "discipline" | "focus"
-      difficulty_level: "easy" | "medium" | "hard"
+      difficulty_level: "easy" | "medium" | "hard" | "trivial"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -403,7 +403,7 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user"],
       attribute_type: ["brain", "health", "skill", "discipline", "focus"],
-      difficulty_level: ["easy", "medium", "hard"],
+      difficulty_level: ["easy", "medium", "hard", "trivial"],
     },
   },
 } as const
