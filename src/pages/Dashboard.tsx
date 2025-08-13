@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import AddHabitModal from '@/components/habits/AddHabitModal';
 import HabitCard from '@/components/habits/HabitCard';
-import { Swords } from 'lucide-react';
+import { Swords, Shield } from 'lucide-react';
 
 interface Habit {
   id: string;
@@ -36,6 +37,7 @@ interface UserProfile {
 
 const Dashboard = () => {
   const { user, signOut, loading } = useAuth();
+  const { isAdmin } = useRole();
   const navigate = useNavigate();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
@@ -186,13 +188,25 @@ const Dashboard = () => {
               Welcome back, {userProfile?.full_name || 'Hunter'}!
             </p>
           </div>
-          <Button
-            onClick={handleSignOut}
-            variant="outline"
-            className="border-purple-500/30 text-white hover:bg-purple-600/20"
-          >
-            Sign Out
-          </Button>
+          <div className="flex gap-3">
+            {isAdmin && (
+              <Button
+                onClick={() => navigate('/admin')}
+                variant="outline"
+                className="border-red-500/30 text-red-400 hover:bg-red-600/20"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Admin Panel
+              </Button>
+            )}
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="border-purple-500/30 text-white hover:bg-purple-600/20"
+            >
+              Sign Out
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}

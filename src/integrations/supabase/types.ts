@@ -253,6 +253,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_delete_user: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
+      admin_reset_user_progress: {
+        Args: { target_user_id: string }
+        Returns: undefined
+      }
       calculate_level: {
         Args: { xp: number }
         Returns: number
@@ -260,6 +268,10 @@ export type Database = {
       get_rank: {
         Args: { level: number }
         Returns: string
+      }
+      is_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
       }
       reset_daily_habits: {
         Args: Record<PropertyKey, never>
