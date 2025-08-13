@@ -57,6 +57,55 @@ const Dashboard = () => {
       fetchUserData();
       fetchHabits();
       fetchDailyCompletions();
+      
+      // Set up real-time subscription for habit completion updates
+      const channel = supabase
+        .channel('dashboard-updates')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'daily_habit_logs',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            // Refresh data when habit logs change
+            fetchUserData();
+            fetchDailyCompletions();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_progress',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            // Refresh user progress when it changes
+            fetchUserData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles',
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            // Refresh profile when it changes
+            fetchUserData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -181,10 +230,10 @@ const Dashboard = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-app-blue to-app-purple bg-clip-text text-transparent">
               LevelUp ⚔️
             </h1>
-            <p className="text-gray-300 text-lg">
+            <p className="text-muted-foreground text-lg">
               Welcome back, {userProfile?.full_name || 'Hunter'}!
             </p>
           </div>
@@ -193,7 +242,7 @@ const Dashboard = () => {
               <Button
                 onClick={() => navigate('/admin')}
                 variant="outline"
-                className="border-red-500/30 text-red-400 hover:bg-red-600/20"
+                className="border-app-red/30 text-app-red hover:bg-app-red/20"
               >
                 <Shield className="w-4 h-4 mr-2" />
                 Admin Panel
@@ -202,7 +251,7 @@ const Dashboard = () => {
             <Button
               onClick={handleSignOut}
               variant="outline"
-              className="border-purple-500/30 text-white hover:bg-purple-600/20"
+              className="border-app-purple/30 text-app-purple hover:bg-app-purple/20"
             >
               Sign Out
             </Button>
@@ -211,45 +260,45 @@ const Dashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-black/40 border-purple-500/30">
+          <Card className="bg-card/40 border-app-purple/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-blue-400 text-sm">Level</CardTitle>
+              <CardTitle className="text-app-blue text-sm">Level</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-card-foreground">
                 {userProfile?.current_level || 1}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/40 border-purple-500/30">
+          <Card className="bg-card/40 border-app-purple/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-green-400 text-sm">Total XP</CardTitle>
+              <CardTitle className="text-app-green text-sm">Total XP</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-card-foreground">
                 {userProfile?.current_xp || 0}
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/40 border-purple-500/30">
+          <Card className="bg-card/40 border-app-purple/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-orange-400 text-sm">Current Streak</CardTitle>
+              <CardTitle className="text-app-orange text-sm">Current Streak</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-card-foreground">
                 {userProgress?.current_streak || 0} days
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-black/40 border-purple-500/30">
+          <Card className="bg-card/40 border-app-purple/30">
             <CardHeader className="pb-2">
-              <CardTitle className="text-purple-400 text-sm">Completed</CardTitle>
+              <CardTitle className="text-app-purple text-sm">Completed</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
+              <div className="text-2xl font-bold text-card-foreground">
                 {userProgress?.total_habits_completed || 0}
               </div>
             </CardContent>
@@ -260,10 +309,10 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Daily Habits */}
           <div className="lg:col-span-2">
-            <Card className="bg-black/40 border-purple-500/30">
+            <Card className="bg-card/40 border-app-purple/30">
               <CardHeader>
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-white text-xl flex items-center gap-2">
+                  <CardTitle className="text-card-foreground text-xl flex items-center gap-2">
                     <Swords className="w-5 h-5" />
                     Today's Habits
                   </CardTitle>
@@ -273,9 +322,9 @@ const Dashboard = () => {
               <CardContent>
                 {habits.length === 0 ? (
                   <div className="text-center py-8">
-                    <Swords className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                    <p className="text-gray-400 mb-4">No active habits yet</p>
-                    <p className="text-sm text-gray-500">Create your first habit to start your journey!</p>
+                    <Swords className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">No active habits yet</p>
+                    <p className="text-sm text-muted-foreground/70">Create your first habit to start your journey!</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -300,22 +349,22 @@ const Dashboard = () => {
 
           {/* Quick Actions */}
           <div className="space-y-6">
-            <Card className="bg-black/40 border-blue-500/30">
+            <Card className="bg-card/40 border-app-blue/30">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Quick Actions</CardTitle>
+                <CardTitle className="text-card-foreground text-lg">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button
                   onClick={() => navigate('/skills')}
                   variant="outline"
-                  className="w-full border-blue-500/30 text-blue-300 hover:bg-blue-600/20"
+                  className="w-full border-app-blue/30 text-app-blue hover:bg-app-blue/20"
                 >
                   View Skills & Attributes
                 </Button>
                 <Button
                   onClick={() => navigate('/onboarding')}
                   variant="outline"
-                  className="w-full border-purple-500/30 text-purple-300 hover:bg-purple-600/20"
+                  className="w-full border-app-purple/30 text-app-purple hover:bg-app-purple/20"
                 >
                   Character Setup
                 </Button>
@@ -323,15 +372,15 @@ const Dashboard = () => {
             </Card>
 
             {/* Progress Summary */}
-            <Card className="bg-black/40 border-green-500/30">
+            <Card className="bg-card/40 border-app-green/30">
               <CardHeader>
-                <CardTitle className="text-white text-lg">Progress Summary</CardTitle>
+                <CardTitle className="text-card-foreground text-lg">Progress Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">Daily Progress</span>
-                    <span className="text-green-400">
+                    <span className="text-muted-foreground">Daily Progress</span>
+                    <span className="text-app-green">
                       {dailyCompletions.length}/{habits.length}
                     </span>
                   </div>
@@ -343,16 +392,16 @@ const Dashboard = () => {
                 
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="text-center">
-                    <div className="text-lg font-bold text-white">
+                    <div className="text-lg font-bold text-card-foreground">
                       {userProgress?.current_streak || 0}
                     </div>
-                    <div className="text-xs text-gray-400">Day Streak</div>
+                    <div className="text-xs text-muted-foreground">Day Streak</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-lg font-bold text-white">
+                    <div className="text-lg font-bold text-card-foreground">
                       {userProgress?.total_habits_completed || 0}
                     </div>
-                    <div className="text-xs text-gray-400">Total Done</div>
+                    <div className="text-xs text-muted-foreground">Total Done</div>
                   </div>
                 </div>
               </CardContent>

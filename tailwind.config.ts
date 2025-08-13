@@ -61,7 +61,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// App-specific semantic colors
+				'app-blue': 'hsl(var(--app-blue))',
+				'app-blue-foreground': 'hsl(var(--app-blue-foreground))',
+				'app-purple': 'hsl(var(--app-purple))',
+				'app-purple-foreground': 'hsl(var(--app-purple-foreground))',
+				'app-green': 'hsl(var(--app-green))',
+				'app-green-foreground': 'hsl(var(--app-green-foreground))',
+				'app-orange': 'hsl(var(--app-orange))',
+				'app-orange-foreground': 'hsl(var(--app-orange-foreground))',
+				'app-red': 'hsl(var(--app-red))',
+				'app-red-foreground': 'hsl(var(--app-red-foreground))',
+				'app-yellow': 'hsl(var(--app-yellow))',
+				'app-yellow-foreground': 'hsl(var(--app-yellow-foreground))'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
